@@ -35,13 +35,20 @@ def relay_github(event, requests_session):
     print('Signature verified: {}'.format(verified))
 
     if verified:
+        headers = {
+                'Content-Type': 'application/json',
+                'X-GitHub-Delivery': event['x_github_delivery'],
+                'X-GitHub-Event': event['x_github_event'],
+                'X-Hub-Signature':  event['x_hub_signature'],
+             }
+        # Add in optional token
+        token = event.get('token', None)
+        if token is not None:
+            print(f"Adding token header '{token}'")
+            headers['token'] = token
+
         response = requests_session.post(event['jenkins_url'],
-                                         headers={
-                                            'Content-Type': 'application/json',
-                                            'X-GitHub-Delivery': event['x_github_delivery'],
-                                            'X-GitHub-Event': event['x_github_event'],
-                                            'X-Hub-Signature':  event['x_hub_signature']
-                                         },
+                                         headers=headers,
                                          data=event['payload'])
         response.raise_for_status()
     else:
